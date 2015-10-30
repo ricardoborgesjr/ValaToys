@@ -1,4 +1,5 @@
-public class Application : Gtk.Window{
+using Gtk;
+public class Application{
     public Json.Array get_places () {
         var uri = "http://localhost/places.json";
 
@@ -20,17 +21,21 @@ public class Application : Gtk.Window{
     }
     
     public Application (){
-        this.title = "Trending Topic Places";
-        this.window_position = Gtk.WindowPosition.CENTER;
-        this.destroy.connect(Gtk.main_quit);
-        this.set_default_size(350, 70);
+        // If the UI contains custom widgets, their types must've been instantiated once
+        // Type type = typeof(Foo.BarEntry);
+        // assert(type != 0);
+        var builder = new Builder ();
+        builder.add_from_file ("window.ui");
+        builder.connect_signals (null);
+        var window = builder.get_object ("window") as Window;
+            
         
         //The Entry
-        Gtk.Entry entry = new Gtk.Entry();
-        this.add(entry);
+        var entry = builder.get_object ("entry") as Entry;
+        
         
         //The EntryCompletion
-        Gtk.EntryCompletion completion = new Gtk.EntryCompletion ();
+        EntryCompletion completion = new EntryCompletion ();
         entry.set_completion(completion);
         
         Gtk.ListStore list_store = new Gtk.ListStore (2, typeof (string), typeof (string));
@@ -50,14 +55,21 @@ public class Application : Gtk.Window{
             list_store.append(out iter);
             list_store.set(iter, 0, place.get_string_member("name"), 1, place.get_string_member("country"));
         }
+        
+        window.show_all ();
+        
     }
     
     public static int main (string[] args) {
         Gtk.init (ref args);
 
-        Application app = new Application ();
-        app.show_all ();
-        Gtk.main ();
+        try {
+            Application app = new Application ();
+            Gtk.main ();
+        } catch (Error e) {
+            stderr.printf ("Could not load UI: %s\n", e.message);
+        return 1;
+    }
         return 0;
     }
 }
